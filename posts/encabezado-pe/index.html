@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  
+  
+    
+  
+  <meta name="description" content="My blog site.">
+
+  <title>Análisis del formato PE</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://example.com/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://example.com/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://example.com/img/apple-touch-icon.png">
+  
+  <style>
+
+  /* light mode colors */
+  body {
+    --primary-color: #5871a2;
+    --primary-pale-color: #5871a233;
+    --primary-decoration-color: #5871a210;
+    --bg-color: #ffffff;
+    --text-color: #2f3030;
+    --text-pale-color: #767676;
+    --text-decoration-color: #a9a9a9;
+    --highlight-mark-color: #5f75b020;
+
+    --callout-note-color: #5871a2;
+    --callout-tip-color: #268556;
+    --callout-important-color: #885fc9;
+    --callout-warning-color: #ab6632;
+    --callout-caution-color: #c64e4e;
+  }
+
+  /* dark mode colors */
+  body.dark {
+    --primary-color: #6f8fd1;
+    --primary-pale-color: #6f8fd166;
+    --primary-decoration-color: #6f8fd112;
+    --bg-color: #1c1c1c;
+    --text-color: #c1c1c1;
+    --text-pale-color: #848484;
+    --text-decoration-color: #5f5f5f;
+    --highlight-mark-color: #8296cb3b;
+
+    --callout-note-color: #6f8fd1;
+    --callout-tip-color: #47976f;
+    --callout-important-color: #9776cd;
+    --callout-warning-color: #ad7a52;
+    --callout-caution-color: #d06161;
+  }
+
+  /* typography */
+  body {
+    --main-font: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --homepage-max-width: 768px;
+    --main-max-width: 768px;
+    --avatar-size: 60px;
+    --font-size: 16px;
+    --line-height: 1.75;
+    --img-border-radius: 0px;
+    --detail-border-radius: 0px;
+    --dark-mode-img-brightness: 0.75;
+    --dark-mode-chart-brightness: 0.75;
+    --inline-code-border-radius: 2px;
+    --inline-code-bg-color: var(--primary-decoration-color);
+    --block-code-border-radius: 0px;
+    --block-code-border-color: var(--primary-color);
+    --detail-border-color: var(--primary-color);
+  }
+
+</style>
+
+  <link rel="stylesheet" href="https://example.com/main.css">
+  
+
+<link id="hl" rel="stylesheet" type="text/css" href="/hl-light.css" />
+
+
+
+  
+</head>
+
+<body class="post">
+  
+  <script>
+    const theme = sessionStorage.getItem('theme');
+    const match = window.matchMedia("(prefers-color-scheme: dark)").matches
+    if ((theme && theme == 'dark') || (!theme && match)) {
+      document.body.classList.add('dark');
+      const hl = document.querySelector('link#hl');
+      if (hl) hl.href = 'https://example.com/hl-dark.css';
+    }
+  </script>
+  
+  
+<div id="wrapper">
+  <div id="blank"></div>
+  <aside>
+    
+    
+    <nav>
+      <ul>
+        
+        <li>
+          <a class="h2" href="#dos-header">DOS Header</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#dos-stub">DOS Stub</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#nt-header-image-nt-headers">NT Header (IMAGE_NT_HEADERS)</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#file-header-image-file-header">File Header (IMAGE_FILE_HEADER)</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#rich-header">Rich Header</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#optional-header">Optional Header</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#directorios-de-importacion-e-iat">Directorios de importación e IAT</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#secciones-de-un-formato-pe">Secciones de un formato PE</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#referencias">Referencias</a>
+          
+        </li>
+        
+      </ul>
+    </nav>
+    
+    
+    <button id="back-to-top" aria-label="back to top">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+
+    </button>
+    
+  </aside>
+  <main>
+    
+<header>
+  <nav>
+    <a id="back-link" href="https:&#x2F;&#x2F;example.com&#x2F;posts">← Back</a>
+  </nav>
+</header>
+
+
+    <div>
+      
+      
+      
+      
+      <div id="copy-cfg" style="display: none;" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+"></div>
+      
+      <article class="prose">
+        <h1>Análisis del formato PE</h1>
+        <div id="post-info">
+          <div id="date">
+            <span id="publish">Nov 12, 2025</span>
+            </div>
+
+          
+          <div id="tags">
+            <a class="instant" href="https://example.com/tags/windows-internals"><span>#</span>windows-internals</a>
+          </div>
+          
+        </div>
+
+        
+        
+
+        
+
+        <p>Portable Executable (PE) es el formato de archivo para ejecutables en Windows. Algunos ejemplos de extensiones de archivos PE son .exe, .dll, .sys y .scr.</p>
+<p><img src="/encabezado-pe/intro.png" alt="" /></p>
+<h2 id="dos-header">DOS Header<a class="zola-anchor" href="#dos-header" aria-label="Anchor link for: dos-header" style="visibility: hidden;"></a>
+</h2>
+<p>El primer encabezado de un archivo PE siempre comienza con los dos bytes <code>0x4D</code>, y <code>0x5A</code>, que son comunmente conocido como <code>MZ</code>.</p>
+<p>Estos dos bytes representan la firma del encabezado DOS que se utiliza para confirmar que el archivo que se está analizando es un archivo PE válido.</p>
+<p>El encabezado PE es una estuctura de datos, que está definida de la siguiente manera.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; dt _IMAGE_DOS_HEADER
+</span><span class="z-text z-plain">combase!_IMAGE_DOS_HEADER
+</span><span class="z-text z-plain">   +0x000 e_magic          : Uint2B
+</span><span class="z-text z-plain">   +0x002 e_cblp           : Uint2B
+</span><span class="z-text z-plain">   +0x004 e_cp             : Uint2B
+</span><span class="z-text z-plain">   +0x006 e_crlc           : Uint2B
+</span><span class="z-text z-plain">   +0x008 e_cparhdr        : Uint2B
+</span><span class="z-text z-plain">   +0x00a e_minalloc       : Uint2B
+</span><span class="z-text z-plain">   +0x00c e_maxalloc       : Uint2B
+</span><span class="z-text z-plain">   +0x00e e_ss             : Uint2B
+</span><span class="z-text z-plain">   +0x010 e_sp             : Uint2B
+</span><span class="z-text z-plain">   +0x012 e_csum           : Uint2B
+</span><span class="z-text z-plain">   +0x014 e_ip             : Uint2B
+</span><span class="z-text z-plain">   +0x016 e_cs             : Uint2B
+</span><span class="z-text z-plain">   +0x018 e_lfarlc         : Uint2B
+</span><span class="z-text z-plain">   +0x01a e_ovno           : Uint2B
+</span><span class="z-text z-plain">   +0x01c e_res            : [4] Uint2B
+</span><span class="z-text z-plain">   +0x024 e_oemid          : Uint2B
+</span><span class="z-text z-plain">   +0x026 e_oeminfo        : Uint2B
+</span><span class="z-text z-plain">   +0x028 e_res2           : [10] Uint2B
+</span><span class="z-text z-plain">   +0x03c e_lfanew         : Int4B
+</span></code></pre>
+<p>Los miembros más importante de la estructura, son <code>e_magic</code> y <code>e_lfanew</code>.</p>
+<ul>
+<li><code>e_magic</code> es un valor de 2 bytes con un valor fijo de <code>0x5A4D</code> o MZ.</li>
+</ul>
+<p><img src="/encabezado-pe/1-mz.png" alt="" /></p>
+<ul>
+<li><code>e_lfanew</code> es un valor de 4 bytes que contiene el desplazamiento hacia el inicio del encabezado <code>NT Header</code>, además, siempre se encuentra en el mismo desplazamiento <code>0x03c</code>.</li>
+</ul>
+<p>Para poder ver <code>e_lfanew</code>, podemos hacerlo mediante WinDBG:</p>
+<p>Primero vemos cual es la dirección basde de notepad.exe.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; lm m notepad
+</span><span class="z-text z-plain">Browse full module list
+</span><span class="z-text z-plain">start    end        module name
+</span><span class="z-text z-plain">00220000 0024d000   notepad    (pdb symbols)          C:\ProgramData\Dbg\sym\notepad.pdb\D3C0E3074D9E4A993BBCC8ACFC85120D1\notepad.pdb
+</span></code></pre>
+<p>Volcamos de nuevo la estructura de <code>_IMAGE_DOS_HEADER</code>, pero añadiendo la dirección base.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; dt _IMAGE_DOS_HEADER 00220000
+</span><span class="z-text z-plain">combase!_IMAGE_DOS_HEADER
+</span><span class="z-text z-plain">   +0x000 e_magic          : 0x5a4d
+</span><span class="z-text z-plain">   +0x002 e_cblp           : 0x90
+</span><span class="z-text z-plain">   +0x004 e_cp             : 3
+</span><span class="z-text z-plain">   +0x006 e_crlc           : 0
+</span><span class="z-text z-plain">   +0x008 e_cparhdr        : 4
+</span><span class="z-text z-plain">   +0x00a e_minalloc       : 0
+</span><span class="z-text z-plain">   +0x00c e_maxalloc       : 0xffff
+</span><span class="z-text z-plain">   +0x00e e_ss             : 0
+</span><span class="z-text z-plain">   +0x010 e_sp             : 0xb8
+</span><span class="z-text z-plain">   +0x012 e_csum           : 0
+</span><span class="z-text z-plain">   +0x014 e_ip             : 0
+</span><span class="z-text z-plain">   +0x016 e_cs             : 0
+</span><span class="z-text z-plain">   +0x018 e_lfarlc         : 0x40
+</span><span class="z-text z-plain">   +0x01a e_ovno           : 0
+</span><span class="z-text z-plain">   +0x01c e_res            : [4] 0
+</span><span class="z-text z-plain">   +0x024 e_oemid          : 0
+</span><span class="z-text z-plain">   +0x026 e_oeminfo        : 0
+</span><span class="z-text z-plain">   +0x028 e_res2           : [10] 0
+</span><span class="z-text z-plain">   +0x03c e_lfanew         : 0n240
+</span><span class="z-text z-plain">   
+</span><span class="z-text z-plain">0:007&gt; ? 0n240
+</span><span class="z-text z-plain">Evaluate expression: 240 = 000000f0
+</span></code></pre>
+<p>Evaluamos la instrucción y obtenemos el valor <code>0xf0</code>, por lo tanto nt_heaaders estará en el desplazamiento <code>002200f0</code></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; db 002200f0
+</span><span class="z-text z-plain">002200f0  50 45 00 00 4c 01 06 00-02 ad ab 47 00 00 00 00  PE..L......G....
+</span><span class="z-text z-plain">00220100  00 00 00 00 e0 00 02 01-0b 01 0e 14 00 20 02 00  ............. ..
+</span><span class="z-text z-plain">00220110  00 74 00 00 00 00 00 00-70 17 02 00 00 10 00 00  .t......p.......
+</span><span class="z-text z-plain">00220120  00 30 02 00 00 00 22 00-00 10 00 00 00 02 00 00  .0....&quot;.........
+</span><span class="z-text z-plain">00220130  0a 00 00 00 0a 00 00 00-0a 00 00 00 00 00 00 00  ................
+</span><span class="z-text z-plain">00220140  00 d0 02 00 00 04 00 00-50 53 03 00 02 00 40 c1  ........PS....@.
+</span><span class="z-text z-plain">00220150  00 00 04 00 00 10 01 00-00 00 10 00 00 10 00 00  ................
+</span><span class="z-text z-plain">00220160  00 00 00 00 10 00 00 00-00 00 00 00 00 00 00 00  ................
+</span></code></pre>
+<p><code>PE</code> indica el inicio de <code>NT_HEADERS</code>.</p>
+<p>Podemos apreciar, que estamos ante el inicio de <code>IMAGE_NT_HEADERS</code>.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; dt IMAGE_NT_HEADERS 002200f0
+</span><span class="z-text z-plain">combase!IMAGE_NT_HEADERS
+</span><span class="z-text z-plain">   +0x000 Signature        : 0x4550
+</span><span class="z-text z-plain">   +0x004 FileHeader       : _IMAGE_FILE_HEADER
+</span><span class="z-text z-plain">   +0x018 OptionalHeader   : _IMAGE_OPTIONAL_HEADER
+</span></code></pre>
+<h2 id="dos-stub">DOS Stub<a class="zola-anchor" href="#dos-stub" aria-label="Anchor link for: dos-stub" style="visibility: hidden;"></a>
+</h2>
+<p>Antes de pasar a la estructura del encabezado <code>NT</code>, se encuentra el <strong>DOS stub</strong>, que es un mensaje de error que muestra:
+<code>"This program cannot be run in DOS mode"</code>.</p>
+<p>Cabe destacar que este mensaje de error puede ser modificado por el programador en tiempo de compilación. Esto no forma parte del encabezado <code>PE</code>, pero es importante tenerlo en cuenta.</p>
+<h2 id="nt-header-image-nt-headers">NT Header (IMAGE_NT_HEADERS)<a class="zola-anchor" href="#nt-header-image-nt-headers" aria-label="Anchor link for: nt-header-image-nt-headers" style="visibility: hidden;"></a>
+</h2>
+<p>El encabezado <strong>NT</strong> es esencial, ya que incorpora otros dos encabezados de imagen: <code>FileHeader</code> y <code>OptionalHeader</code>, los cuales contienen una gran cantidad de información sobre el archivo <code>PE</code>. De forma similar al encabezado <strong>DOS</strong>, el encabezado NT contiene un miembro de <code>signature</code> que se utiliza para verificar su validez.</p>
+<p>Normalmente, este elemento de firma es igual a la cadena <code>"PE"</code>, que está representada por los bytes <code>0x50</code> y <code>0x45</code> como hemos podido ver anteriormente. Sin embargo, dado que la firma es de tipo de dato <code>DWORD</code> (4 bytes), se representa como <code>0x50450000</code> (Siempre es igual), que sigue siendo <code>"PE"</code>, pero con dos bytes nulos de relleno.</p>
+<pre class="z-code"><code><span class="z-text z-plain">002200f0  50 45 00 00 4c 01 06 00-02 ad ab 47 00 00 00 00  PE..L......G....
+</span></code></pre>
+<p>El encabezado NT puede localizarse utilizando el miembro <code>e_lfanew</code> dentro del encabezado DOS. La estructura del encabezado NT varía dependiendo de la arquitectura de la máquina.</p>
+<ul>
+<li>32 Bits</li>
+</ul>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_NT_HEADERS <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                   Signature<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  IMAGE_FILE_HEADER       FileHeader<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  IMAGE_OPTIONAL_HEADER32 OptionalHeader<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_NT_HEADERS32<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_NT_HEADERS32</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></code></pre>
+<ul>
+<li>64 Bits</li>
+</ul>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_NT_HEADERS64 <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">    <span class="z-support z-type z-windows z-c">DWORD</span>                   Signature<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">    IMAGE_FILE_HEADER       FileHeader<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">    IMAGE_OPTIONAL_HEADER64 OptionalHeader<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_NT_HEADERS64<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_NT_HEADERS64</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></code></pre>
+<h2 id="file-header-image-file-header">File Header (IMAGE_FILE_HEADER)<a class="zola-anchor" href="#file-header-image-file-header" aria-label="Anchor link for: file-header-image-file-header" style="visibility: hidden;"></a>
+</h2>
+<p>Pasando al siguiente encabezado, el cual puede accederse a partir de la estructura de datos del encabezado NT.</p>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_FILE_HEADER <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>  Machine<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>  NumberOfSections<span class="z-punctuation z-terminator z-c">;</span> <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span> TimeDateStamp<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span> PointerToSymbolTable<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span> NumberOfSymbols<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>  SizeOfOptionalHeader<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>  Characteristics<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_FILE_HEADER<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_FILE_HEADER</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></code></pre>
+<p>Los miembros más importantes de la estructura son:</p>
+<ul>
+<li>
+<p><code>NumberOfSections</code> – El número de secciones en el archivo <code>PE</code>.</p>
+</li>
+<li>
+<p><code>Characteristics</code> – Son "banderas" que especifican ciertos atributos del archivo ejecutable, como si es una biblioteca de enlace dinámico (<code>DLL</code>) o una aplicación de consola.</p>
+</li>
+<li>
+<p><code>SizeOfOptionalHeader</code> – El tamaño del encabezado opcional que sigue a continuación</p>
+</li>
+</ul>
+<h2 id="rich-header">Rich Header<a class="zola-anchor" href="#rich-header" aria-label="Anchor link for: rich-header" style="visibility: hidden;"></a>
+</h2>
+<p>Este encabezado solo aparece cuando se compila una aplicación con visual studio, se puede modificar, por lo tanto no aparecerá en todos los ejecutables PE, solo en los creados con visual studio.</p>
+<h2 id="optional-header">Optional Header<a class="zola-anchor" href="#optional-header" aria-label="Anchor link for: optional-header" style="visibility: hidden;"></a>
+</h2>
+<p>El encabezado opcional Optional Header es importante y, aunque se le llama "opcional", en realidad es esencial para la ejecución de un archivo <code>PE</code>. Se le denomina "opcional" porque algunos tipos de archivos no lo incluyen. Este encabezado tiene dos versiones: una para sistemas de 32 bits y otra para sistemas de 64 bits. Ambas versiones tienen miembros casi idénticos en su estructura de datos, con la principal diferencia en el tamaño de algunos de esos miembros.</p>
+<ul>
+<li>
+<p>En la versión de <strong>64 bits</strong>, se utiliza <code>ULONGLONG</code> para representar valores grandes.</p>
+</li>
+<li>
+<p>En la versión de <strong>32 bits</strong>, se utiliza <code>DWORD</code>.</p>
+</li>
+</ul>
+<p>Además, la versión de 32 bits contiene algunos miembros que no se encuentran en la versión de 64 bits.</p>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_OPTIONAL_HEADER <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span> <span class="z-comment z-line z-double-slash z-c"><span class="z-punctuation z-definition z-comment z-c">//</span> 32 bits
+</span></span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 Magic<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">BYTE</span>                 MajorLinkerVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">BYTE</span>                 MinorLinkerVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfCode<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfInitializedData<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfUninitializedData<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                AddressOfEntryPoint<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                BaseOfCode<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                BaseOfData<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                ImageBase<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SectionAlignment<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                FileAlignment<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorOperatingSystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorOperatingSystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorImageVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorImageVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorSubsystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorSubsystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                Win32VersionValue<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfImage<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfHeaders<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                CheckSum<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 Subsystem<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 DllCharacteristics<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfStackReserve<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfStackCommit<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfHeapReserve<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfHeapCommit<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                LoaderFlags<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                NumberOfRvaAndSizes<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  IMAGE_DATA_DIRECTORY DataDirectory<span class="z-meta z-brackets z-c"><span class="z-punctuation z-section z-brackets z-begin z-c">[</span>IMAGE_NUMBEROF_DIRECTORY_ENTRIES<span class="z-punctuation z-section z-brackets z-end z-c">]</span></span><span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_OPTIONAL_HEADER32<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_OPTIONAL_HEADER32</span><span class="z-punctuation z-terminator z-c">;</span>
+</span><span class="z-source z-c">
+</span></code></pre>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_OPTIONAL_HEADER64 <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span> <span class="z-comment z-line z-double-slash z-c"><span class="z-punctuation z-definition z-comment z-c">//</span> 64 bits
+</span></span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 Magic<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">BYTE</span>                 MajorLinkerVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">BYTE</span>                 MinorLinkerVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfCode<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfInitializedData<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfUninitializedData<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                AddressOfEntryPoint<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                BaseOfCode<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">ULONGLONG</span>            ImageBase<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SectionAlignment<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                FileAlignment<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorOperatingSystemVersion<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorOperatingSystemVersion<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorImageVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorImageVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MajorSubsystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 MinorSubsystemVersion<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                Win32VersionValue<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfImage<span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                SizeOfHeaders<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                CheckSum<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 Subsystem<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">WORD</span>                 DllCharacteristics<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">ULONGLONG</span>            SizeOfStackReserve<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">ULONGLONG</span>            SizeOfStackCommit<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">ULONGLONG</span>            SizeOfHeapReserve<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">ULONGLONG</span>            SizeOfHeapCommit<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                LoaderFlags<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  <span class="z-support z-type z-windows z-c">DWORD</span>                NumberOfRvaAndSizes<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">  IMAGE_DATA_DIRECTORY DataDirectory<span class="z-meta z-brackets z-c"><span class="z-punctuation z-section z-brackets z-begin z-c">[</span>IMAGE_NUMBEROF_DIRECTORY_ENTRIES<span class="z-punctuation z-section z-brackets z-end z-c">]</span></span><span class="z-punctuation z-terminator z-c">;</span>  <span class="z-keyword z-operator z-comparison z-c">&lt;=</span><span class="z-keyword z-operator z-assignment z-c">=</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_OPTIONAL_HEADER64<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_OPTIONAL_HEADER64</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></code></pre>
+<p>El encabezado opcional contiene una gran cantidad de información útil. A continuación se presentan algunos de los miembros de la estructura que se utilizan comúnmente:</p>
+<ul>
+<li>
+<p><strong>Magic</strong> – Describe el estado del archivo de imagen (imagen de 32 o 64 bits).</p>
+<ul>
+<li><strong><code>0x10B</code>:</strong> Identifica la imagen como ejecutable <code>PE32</code>.</li>
+<li><strong><code>0x20B</code>:</strong> Identifica la imagen como ejecutable <code>PE32+</code>.</li>
+<li><strong><code>0x107</code>:</strong> Identifica la imagen como una imagen ROM.</li>
+</ul>
+</li>
+<li>
+<p><strong>MajorOperatingSystemVersion</strong> – El número de versión mayor del sistema operativo requerido (por ejemplo, 11, 10).</p>
+</li>
+<li>
+<p><strong>MinorOperatingSystemVersion</strong> – El número de versión menor del sistema operativo requerido (por ejemplo, 1511, 1507, 1607).</p>
+</li>
+<li>
+<p><strong>SizeOfCode</strong> – El tamaño de la sección <code>.text</code> (se discutirá más adelante).</p>
+</li>
+<li>
+<p><strong>AddressOfEntryPoint</strong> – Desplazamiento hacia el punto de entrada del archivo (normalmente la función principal).</p>
+</li>
+<li>
+<p><strong>BaseOfCode</strong> – Desplazamiento hacia el inicio de la sección <code>.text</code>.</p>
+</li>
+<li>
+<p><strong>SizeOfImage</strong> – El tamaño total del archivo de imagen en bytes.</p>
+</li>
+<li>
+<p><strong>ImageBase</strong> – Especifica la dirección preferida en la que la aplicación debe cargarse en memoria cuando se ejecute. Sin embargo, debido a los mecanismos de protección de memoria de Windows, como la <strong>Randomización del Diseño del Espacio de Direcciones (ASLR)</strong>, es raro ver una imagen mapeada en su dirección preferida, ya que el cargador de <code>PE</code> de Windows mapea el archivo en una dirección diferente.</p>
+</li>
+<li>
+<p><strong>DataDirectory</strong> – Uno de los miembros más importantes en el encabezado opcional. Este es un arreglo de <code>IMAGE_DATA_DIRECTORY</code>, que contiene los directorios en un archivo <code>PE</code>.</p>
+<pre data-lang="c" class="language-c z-code"><code class="language-c" data-lang="c"><span class="z-source z-c"><span class="z-storage z-type z-c">typedef</span> <span class="z-storage z-type z-c">struct</span> _IMAGE_DATA_DIRECTORY <span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-begin z-c">{</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">   <span class="z-support z-type z-windows z-c">DWORD</span>   VirtualAddress<span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c">   <span class="z-support z-type z-windows z-c">DWORD</span>   <span class="z-support z-type z-mac-classic z-c">Size</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></span><span class="z-source z-c"><span class="z-meta z-block z-c"><span class="z-punctuation z-section z-block z-end z-c">}</span></span> IMAGE_DATA_DIRECTORY<span class="z-punctuation z-separator z-c">,</span> <span class="z-keyword z-operator z-c">*</span><span class="z-entity z-name z-type z-typedef z-c">PIMAGE_DATA_DIRECTORY</span><span class="z-punctuation z-terminator z-c">;</span>
+</span></code></pre>
+</li>
+</ul>
+<p>El array Data Directory tiene un tamaño de <code>IMAGE_NUMBEROF_DIRECTORY_ENTRIES</code>, que es un valor constante de <strong>16</strong>. Cada elemento del arreglo representa un directorio de datos específico, que incluye información sobre una sección de <code>PE</code> o una tabla de Datos (el lugar donde se guarda información específica sobre el <code>PE</code>).</p>
+<h3 id="directorios-de-importacion-e-iat">Directorios de importación e IAT<a class="zola-anchor" href="#directorios-de-importacion-e-iat" aria-label="Anchor link for: directorios-de-importacion-e-iat" style="visibility: hidden;"></a>
+</h3>
+<p>El directorio de exportación de un archivo <code>PE</code> es una estructura de datos que contiene información sobre las funciones y variables que son exportadas desde el ejecutable.</p>
+<p>Contiene las direcciones de las funciones y variables exportadas, que pueden ser utilizadas por otros archivos ejecutables para acceder a esas funciones y datos. El directorio de exportación generalmente se encuentra en archivos <code>DLL</code> que exportan funciones (por ejemplo, <code>kernel32.dll</code> exportando <code>CreateFileA</code>).</p>
+<p>La tabla de direcciones de importación (IAT) es una estructura de datos en un archivo <code>PE</code> que contiene información sobre las direcciones de las funciones importadas desde otros archivos ejecutables. Las direcciones se utilizan para acceder a las funciones y datos en los otros ejecutables.</p>
+<h2 id="secciones-de-un-formato-pe">Secciones de un formato PE<a class="zola-anchor" href="#secciones-de-un-formato-pe" aria-label="Anchor link for: secciones-de-un-formato-pe" style="visibility: hidden;"></a>
+</h2>
+<p>Las secciones de un archivo PE contienen el código y los datos utilizados para crear un programa ejecutable. Cada sección PE tiene un nombre único y generalmente contiene código ejecutable, datos o información de recursos.</p>
+<p>No existe un número constante de secciones PE porque diferentes compiladores pueden agregar, eliminar o combinar secciones dependiendo de la configuración.</p>
+<p><img src="/encabezado-pe/2-sections.png" alt="" /></p>
+<ul>
+<li>
+<p><strong>.text</strong>: Contiene el código ejecutable, es decir, el código escrito.</p>
+</li>
+<li>
+<p><strong>.data</strong>: Contiene datos inicializados, que son variables inicializadas en el código.</p>
+</li>
+<li>
+<p><strong>.rdata</strong>: Contiene datos de solo lectura. Estas son variables constantes precedidas por <code>const</code>.</p>
+</li>
+<li>
+<p><strong>.idata</strong>: Contiene las tablas de importación. Son tablas de información relacionadas con las funciones que se llaman usando el código. Esto es utilizado por el cargador de <code>PE</code> de Windows para determinar qué archivos <code>DLL</code> cargar en el proceso, junto con qué funciones se están utilizando de cada <code>DLL</code>.</p>
+</li>
+<li>
+<p><strong>.reloc</strong>: Contiene información sobre cómo corregir las direcciones de memoria para que el programa pueda cargarse en memoria sin errores.</p>
+</li>
+<li>
+<p><strong>.rsrc</strong>: Se usa para almacenar recursos como iconos y mapas de bits.</p>
+</li>
+</ul>
+<h2 id="referencias">Referencias<a class="zola-anchor" href="#referencias" aria-label="Anchor link for: referencias" style="visibility: hidden;"></a>
+</h2>
+<ul>
+<li>https://learn.microsoft.com/es-es/windows/win32/debug/pe-format</li>
+</ul>
+
+      </article>
+
+      
+      
+
+      
+      
+    </div>
+
+    
+
+
+<footer>
+  <div class="left">
+    <div class="copyright">
+      © 0x7e9 Dreamer
+      
+    </div>
+  </div>
+
+  <div class="right">
+    
+    
+      
+    
+    
+    <a id="rss-btn" href="https://example.com/posts/feed.xml">RSS</a>
+    
+    
+
+    
+    
+    
+    <button id="theme-toggle" aria-label="theme switch">
+      <span class="moon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z" fill="currentColor"></path></svg>
+</span>
+      <span class="sun-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z" fill="currentColor"></path></svg>
+</span>
+    </button>
+    
+  </div>
+</footer>
+
+
+
+
+<dialog id="rss-mask">
+  <div>
+    <a href="https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml">https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml</a>
+    
+    
+    <button autofocus aria-label="copy" data-link="https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z" fill="currentColor"></path></svg>
+
+    </button>
+  </div>
+</dialog>
+
+
+
+  </main>
+</div>
+
+  
+<script src="/js/lightense.min.js"></script>
+
+
+  <script src="https://example.com/js/main.js"></script>
+</body>
+
+</html>

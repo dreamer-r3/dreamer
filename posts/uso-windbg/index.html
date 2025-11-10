@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  
+  
+    
+  
+  <meta name="description" content="My blog site.">
+
+  <title>Explicación de comandos en WinDBG</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://example.com/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://example.com/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://example.com/img/apple-touch-icon.png">
+  
+  <style>
+
+  /* light mode colors */
+  body {
+    --primary-color: #5871a2;
+    --primary-pale-color: #5871a233;
+    --primary-decoration-color: #5871a210;
+    --bg-color: #ffffff;
+    --text-color: #2f3030;
+    --text-pale-color: #767676;
+    --text-decoration-color: #a9a9a9;
+    --highlight-mark-color: #5f75b020;
+
+    --callout-note-color: #5871a2;
+    --callout-tip-color: #268556;
+    --callout-important-color: #885fc9;
+    --callout-warning-color: #ab6632;
+    --callout-caution-color: #c64e4e;
+  }
+
+  /* dark mode colors */
+  body.dark {
+    --primary-color: #6f8fd1;
+    --primary-pale-color: #6f8fd166;
+    --primary-decoration-color: #6f8fd112;
+    --bg-color: #1c1c1c;
+    --text-color: #c1c1c1;
+    --text-pale-color: #848484;
+    --text-decoration-color: #5f5f5f;
+    --highlight-mark-color: #8296cb3b;
+
+    --callout-note-color: #6f8fd1;
+    --callout-tip-color: #47976f;
+    --callout-important-color: #9776cd;
+    --callout-warning-color: #ad7a52;
+    --callout-caution-color: #d06161;
+  }
+
+  /* typography */
+  body {
+    --main-font: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --homepage-max-width: 768px;
+    --main-max-width: 768px;
+    --avatar-size: 60px;
+    --font-size: 16px;
+    --line-height: 1.75;
+    --img-border-radius: 0px;
+    --detail-border-radius: 0px;
+    --dark-mode-img-brightness: 0.75;
+    --dark-mode-chart-brightness: 0.75;
+    --inline-code-border-radius: 2px;
+    --inline-code-bg-color: var(--primary-decoration-color);
+    --block-code-border-radius: 0px;
+    --block-code-border-color: var(--primary-color);
+    --detail-border-color: var(--primary-color);
+  }
+
+</style>
+
+  <link rel="stylesheet" href="https://example.com/main.css">
+  
+
+<link id="hl" rel="stylesheet" type="text/css" href="/hl-light.css" />
+
+
+
+  
+</head>
+
+<body class="post">
+  
+  <script>
+    const theme = sessionStorage.getItem('theme');
+    const match = window.matchMedia("(prefers-color-scheme: dark)").matches
+    if ((theme && theme == 'dark') || (!theme && match)) {
+      document.body.classList.add('dark');
+      const hl = document.querySelector('link#hl');
+      if (hl) hl.href = 'https://example.com/hl-dark.css';
+    }
+  </script>
+  
+  
+<div id="wrapper">
+  <div id="blank"></div>
+  <aside>
+    
+    
+    <nav>
+      <ul>
+        
+        <li>
+          <a class="h2" href="#interfaz-de-windbg">Interfaz de WinDbg</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#acceso-y-manipulacion-de-la-memoria">Acceso y manipulación de la memoria</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#volcado-de-estructuras">Volcado de estructuras</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#escritura-y-busqueda-en-la-memoria">Escritura y búsqueda en la memoria</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#puntos-de-interrupcion">Puntos de interrupción</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#puntos-de-interrupcion-de-software">Puntos de interrupción de Software</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#puntos-de-interrupcion-de-hardware">Puntos de interrupción de Hardware</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#otras-funciones-de-windbg">Otras funciones de WinDbg</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#referencias">Referencias</a>
+          
+        </li>
+        
+      </ul>
+    </nav>
+    
+    
+    <button id="back-to-top" aria-label="back to top">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+
+    </button>
+    
+  </aside>
+  <main>
+    
+<header>
+  <nav>
+    <a id="back-link" href="https:&#x2F;&#x2F;example.com&#x2F;posts">← Back</a>
+  </nav>
+</header>
+
+
+    <div>
+      
+      
+      
+      
+      <div id="copy-cfg" style="display: none;" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+"></div>
+      
+      <article class="prose">
+        <h1>Explicación de comandos en WinDBG</h1>
+        <div id="post-info">
+          <div id="date">
+            <span id="publish">Nov 7, 2025</span>
+            </div>
+
+          
+          <div id="tags">
+            <a class="instant" href="https://example.com/tags/windbg"><span>#</span>WinDBG</a>
+          </div>
+          
+        </div>
+
+        
+        
+
+        
+
+        <p>WinDbg es un depurador que se puede usar para analizar volcados de memoria, depurar el modo de usuario activo y el código en modo kernel, y examinar los registros de CPU y la memoria.</p>
+<p>En este caso solo nos enfocaremos en el <strong>modo usuario</strong>, y se mostrarán los ejemplos con el bloc de notas de Windows de 32 bits (notepad).</p>
+<h2 id="interfaz-de-windbg">Interfaz de WinDbg<a class="zola-anchor" href="#interfaz-de-windbg" aria-label="Anchor link for: interfaz-de-windbg" style="visibility: hidden;"></a>
+</h2>
+<p>La pantalla de inicio del depurador es la siguiente:</p>
+<p><img src="/windbg/1.png" alt="" /></p>
+<p>Para "adjuntar" un proceso, haremos clic en archivo situado en la parte izquierda superior y como se muestra en la foto, de nuevo, haremos doble clic sobre <code>notepad.exe</code>.</p>
+<p><img src="/windbg/2.png" alt="" /></p>
+<p>El depurador inyecta un punto de interrupción de software sobrescribiendo la instrucción actual en la memoria con una instrucción de ensamblador (<code>INT 3</code>).</p>
+<p><img src="/windbg/3.png" alt="" /></p>
+<p>WinDbg también cuenta con símbolos de depuración que le permiten referenciar funciones internas, estructuras y variables globales mediante nombres en lugar de direcciones.</p>
+<p>Los archivos <code>.PDB</code>, se crean cuando Microsoft compila los archivos nativos en Windows. Microsoft no proporciona estos archivos de símbolos para todos los archivos, además las aplicaciones de terceros pueden tener sus propios archivos de símbolos.</p>
+<p>La ruta que se utiliza es <code>C:\Symbols</code> y los módulos se pueden cargar mediante <code>.reload</code>.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; .reload /f
+</span><span class="z-text z-plain">Reloading current modules
+</span><span class="z-text z-plain">...
+</span></code></pre>
+<h2 id="acceso-y-manipulacion-de-la-memoria">Acceso y manipulación de la memoria<a class="zola-anchor" href="#acceso-y-manipulacion-de-la-memoria" aria-label="Anchor link for: acceso-y-manipulacion-de-la-memoria" style="visibility: hidden;"></a>
+</h2>
+<p>WinDbg proporciona una gran cantidad de comandos para poder desensamblar, leer y modificar la memoria.</p>
+<p>Para poder desensamblar se hace con el comando <code>u</code>, que acepta una sola dirección de memoria o un rango de memoria como argumento, si no se especifica este argumento, comenzará desde <code>EIP</code>.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; u kernel32!Writefile
+</span><span class="z-text z-plain">KERNEL32!WriteFile:
+</span><span class="z-text z-plain">774dd830 ff2524955377    jmp     dword ptr [KERNEL32!_imp__WriteFile (77539524)]
+</span><span class="z-text z-plain">774dd836 cc              int     3
+</span><span class="z-text z-plain">774dd837 cc              int     3
+</span><span class="z-text z-plain">774dd838 cc              int     3
+</span><span class="z-text z-plain">774dd839 cc              int     3
+</span><span class="z-text z-plain">774dd83a cc              int     3
+</span><span class="z-text z-plain">774dd83b cc              int     3
+</span><span class="z-text z-plain">774dd83c cc              int     3
+</span></code></pre>
+<p>En cambio, para poder leer la memoria tenemos diferentes maneras de poder mostrarlo en el depurador:</p>
+<p><strong>Mostrar los bytes:</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; db esp
+</span><span class="z-text z-plain">02dff8e4  09 b5 8b 77 7b 84 c8 81-d0 b4 8b 77 d0 b4 8b 77  ...w{......w...w
+</span><span class="z-text z-plain">02dff8f4  00 00 00 00 e8 f8 df 02-00 00 00 00 6c f9 df 02  ............l...
+</span><span class="z-text z-plain">02dff904  c0 85 88 77 ab ee 98 f4-00 00 00 00 20 f9 df 02  ...w........ ...
+</span><span class="z-text z-plain">02dff914  09 d1 4c 77 00 00 00 00-f0 d0 4c 77 7c f9 df 02  ..Lw......Lw|...
+</span><span class="z-text z-plain">02dff924  0d 25 81 77 00 00 00 00-17 84 c8 81 00 00 00 00  .%.w............
+</span><span class="z-text z-plain">02dff934  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+</span><span class="z-text z-plain">02dff944  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+</span><span class="z-text z-plain">02dff954  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+</span></code></pre>
+<p><strong>Mostrar los datos en WORDS:</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; dw esp
+</span><span class="z-text z-plain">02dff8e4  b509 778b 847b 81c8 b4d0 778b b4d0 778b
+</span><span class="z-text z-plain">02dff8f4  0000 0000 f8e8 02df 0000 0000 f96c 02df
+</span><span class="z-text z-plain">02dff904  85c0 7788 eeab f498 0000 0000 f920 02df
+</span><span class="z-text z-plain">02dff914  d109 774c 0000 0000 d0f0 774c f97c 02df
+</span><span class="z-text z-plain">02dff924  250d 7781 0000 0000 8417 81c8 0000 0000
+</span><span class="z-text z-plain">02dff934  0000 0000 0000 0000 0000 0000 0000 0000
+</span><span class="z-text z-plain">02dff944  0000 0000 0000 0000 0000 0000 0000 0000
+</span><span class="z-text z-plain">02dff954  0000 0000 0000 0000 0000 0000 0000 0000
+</span></code></pre>
+<p><strong>Mostrar los datos en DWORD:</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dd esp
+</span><span class="z-text z-plain">02dbf8f8  775bb509 0c027ab8 775bb4d0 775bb4d0
+</span><span class="z-text z-plain">02dbf908  00000000 02dbf8fc 00000000 02dbf980
+</span><span class="z-text z-plain">02dbf918  775885c0 7986105c 00000000 02dbf934
+</span><span class="z-text z-plain">02dbf928  769dd109 00000000 769dd0f0 02dbf990
+</span><span class="z-text z-plain">02dbf938  7751250d 00000000 0c027a0c 00000000
+</span><span class="z-text z-plain">02dbf948  00000000 00000000 00000000 00000000
+</span><span class="z-text z-plain">02dbf958  00000000 00000000 00000000 00000000
+</span><span class="z-text z-plain">02dbf968  00000000 00000000 00000000 00000000
+</span></code></pre>
+<p><strong>Mostrar los datos en QWORDS:</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dq 02dbf8f8
+</span><span class="z-text z-plain">02dbf8f8  0c027ab8`775bb509 775bb4d0`775bb4d0
+</span><span class="z-text z-plain">02dbf908  02dbf8fc`00000000 02dbf980`00000000
+</span><span class="z-text z-plain">02dbf918  7986105c`775885c0 02dbf934`00000000
+</span><span class="z-text z-plain">02dbf928  00000000`769dd109 02dbf990`769dd0f0
+</span><span class="z-text z-plain">02dbf938  00000000`7751250d 00000000`0c027a0c
+</span><span class="z-text z-plain">02dbf948  00000000`00000000 00000000`00000000
+</span><span class="z-text z-plain">02dbf958  00000000`00000000 00000000`00000000
+</span><span class="z-text z-plain">02dbf968  00000000`00000000 00000000`00000000
+</span></code></pre>
+<p>También se puede formar en formato <strong>ASCII</strong> / <strong>UNICODE</strong> y seleccionar la memoria que se desea ver ya que por defecto WInDbg muestra <code>0x80</code> bytes:</p>
+<blockquote>
+<p>No confundir <code>dw</code> con <code>dW</code>.</p>
+</blockquote>
+<pre class="z-code"><code><span class="z-text z-plain">dc KERNELBASE 
+</span><span class="z-text z-plain">75420000  00905a4d 00000003 00000004 0000ffff  MZ..............
+</span><span class="z-text z-plain">75420010  000000b8 00000000 00000040 00000000  ........@.......
+</span><span class="z-text z-plain">75420020  00000000 00000000 00000000 00000000  ................
+</span><span class="z-text z-plain">75420030  00000000 00000000 00000000 000000f8  ................
+</span><span class="z-text z-plain">75420040  0eba1f0e cd09b400 4c01b821 685421cd  ........!..L.!Th
+</span><span class="z-text z-plain">75420050  70207369 72676f72 63206d61 6f6e6e61  is program canno
+</span><span class="z-text z-plain">75420060  65622074 6e757220 206e6920 20534f44  t be run in DOS 
+</span><span class="z-text z-plain">75420070  65646f6d 0a0d0d2e 00000024 00000000  mode....$.......
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">dW KERNELBASE L4
+</span><span class="z-text z-plain">75420000  5a4d 0090 0003 0000                      MZ......
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">db KERNELBASE L5
+</span><span class="z-text z-plain">75420000  4d 5a 90 00 03                                   MZ...
+</span></code></pre>
+<p>También hay la posibilidad de mostrar los datos mediante el comando "puntero a datos(<code>poi</code>)", que muestra los datos referenciados desde una dirección de memoria, se usará <code>esp</code> para simular una desreferencia de memoria.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dd esp L1
+</span><span class="z-text z-plain">02dbf8f8  775bb509
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:003&gt; dd 775bb509
+</span><span class="z-text z-plain">775bb509  c03307eb 658bc340 fc45c7e8 fffffffe
+</span><span class="z-text z-plain">775bb519  b0e8006a ccfff570 cccccccc cccccccc
+</span><span class="z-text z-plain">775bb529  cccccccc 8bcccccc ec8b55ff 180d8b64
+</span><span class="z-text z-plain">775bb539  8b000000 81890845 00000f24 0004c25d
+</span><span class="z-text z-plain">775bb549  cccccccc 8bcccccc ec8b55ff 0018a164
+</span><span class="z-text z-plain">775bb559  b0ff0000 00000f24 e80875ff fffc4157
+</span><span class="z-text z-plain">775bb569  0004c25d cccccccc cccccccc cccccccc
+</span><span class="z-text z-plain">775bb579  cccccccc 8bcccccc ec8b55ff 640875ff
+</span></code></pre>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dd poi(esp)
+</span><span class="z-text z-plain">775bb509  c03307eb 658bc340 fc45c7e8 fffffffe
+</span><span class="z-text z-plain">775bb519  b0e8006a ccfff570 cccccccc cccccccc
+</span><span class="z-text z-plain">775bb529  cccccccc 8bcccccc ec8b55ff 180d8b64
+</span><span class="z-text z-plain">775bb539  8b000000 81890845 00000f24 0004c25d
+</span><span class="z-text z-plain">775bb549  cccccccc 8bcccccc ec8b55ff 0018a164
+</span><span class="z-text z-plain">775bb559  b0ff0000 00000f24 e80875ff fffc4157
+</span><span class="z-text z-plain">775bb569  0004c25d cccccccc cccccccc cccccccc
+</span><span class="z-text z-plain">775bb579  cccccccc 8bcccccc ec8b55ff 640875ff
+</span></code></pre>
+<h3 id="volcado-de-estructuras">Volcado de estructuras<a class="zola-anchor" href="#volcado-de-estructuras" aria-label="Anchor link for: volcado-de-estructuras" style="visibility: hidden;"></a>
+</h3>
+<p>WinDbg también tiene la capacidad de poder poder volcar las estructuras con el comando <code>dt</code>.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dt ntdll!_TEB
+</span><span class="z-text z-plain">   +0x000 NtTib            : _NT_TIB
+</span><span class="z-text z-plain">   +0x01c EnvironmentPointer : Ptr32 Void
+</span><span class="z-text z-plain">   +0x020 ClientId         : _CLIENT_ID
+</span><span class="z-text z-plain">   +0x028 ActiveRpcHandle  : Ptr32 Void
+</span><span class="z-text z-plain">   +0x02c ThreadLocalStoragePointer : Ptr32 Void
+</span><span class="z-text z-plain">   +0x030 ProcessEnvironmentBlock : Ptr32 _PEB
+</span><span class="z-text z-plain">   +0x034 LastErrorValue   : Uint4B
+</span><span class="z-text z-plain">   +0x038 CountOfOwnedCriticalSections : Uint4B
+</span><span class="z-text z-plain">   +0x03c CsrClientThread  : Ptr32 Void
+</span><span class="z-text z-plain">   +0x040 Win32ThreadInfo  : Ptr32 Void
+</span><span class="z-text z-plain">   +0x044 User32Reserved   : [26] Uint4B
+</span><span class="z-text z-plain">   +0x0ac UserReserved     : [5] Uint4B
+</span><span class="z-text z-plain">   +0x0c0 WOW32Reserved    : Ptr32 Void
+</span><span class="z-text z-plain">	...
+</span><span class="z-text z-plain">	
+</span><span class="z-text z-plain">   +0xfd8 LockCount        : Uint4B
+</span><span class="z-text z-plain">   +0xfdc WowTebOffset     : Int4B
+</span><span class="z-text z-plain">   +0xfe0 ResourceRetValue : Ptr32 Void
+</span><span class="z-text z-plain">   +0xfe4 ReservedForWdf   : Ptr32 Void
+</span><span class="z-text z-plain">   +0xfe8 ReservedForCrt   : Uint8B
+</span><span class="z-text z-plain">   +0xff0 EffectiveContainerId : _GUID
+</span></code></pre>
+<p>En este caso la dirección opcional para la estructura no se proporcionó y se muestra tanto los campos de la estructura como el desplazamiento. Cada campo especificado para esa estructura se muestra en su desplazamiento relativo especifico dentro de la estructura.</p>
+<p>En los casos en que un campo apunta a una estructura anidada, el tipo de dato del campo se reemplaza por el tipo de subestructura correcto, también se puede identificar porque está compuesto por un guión bajo y el nombre en mayúscula.</p>
+<p>EL campo <code>NtTib</code> que está en el desplazamiento <code>0x0</code> es una estructura anidada de tipo <code>_NT_TIB</code>.</p>
+<p>Si se conoce la dirección de memoria de una estructura, se pueda pasar el comando <code>dt -r</code>, que mostrara de forma recursiva las estructuras anidadas.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; dt -r ntdll!_TEB @$teb
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain"> +0x000 NtTib            : _NT_TIB
+</span><span class="z-text z-plain">      +0x000 ExceptionList    : 0x02dbf914 _EXCEPTION_REGISTRATION_RECORD
+</span><span class="z-text z-plain">         +0x000 Next             : 0x02dbf980 _EXCEPTION_REGISTRATION_RECORD
+</span><span class="z-text z-plain">         +0x004 Handler          : 0x775885c0           _EXCEPTION_DISPOSITION  ntdll!_except_handler4+0
+</span><span class="z-text z-plain">      +0x004 StackBase        : 0x02dc0000 Void
+</span><span class="z-text z-plain">      +0x008 StackLimit       : 0x02dbc000 Void
+</span><span class="z-text z-plain">      +0x00c SubSystemTib     : (null) 
+</span><span class="z-text z-plain">      +0x010 FiberData        : 0x00001e00 Void
+</span><span class="z-text z-plain">      +0x010 Version          : 0x1e00
+</span><span class="z-text z-plain">      +0x014 ArbitraryUserPointer : (null) 
+</span><span class="z-text z-plain">      +0x018 Self             : 0x02a46000 _NT_TIB
+</span><span class="z-text z-plain">         +0x000 ExceptionList    : 0x02dbf914 _EXCEPTION_REGISTRATION_RECORD
+</span><span class="z-text z-plain">         +0x004 StackBase        : 0x02dc0000 Void
+</span><span class="z-text z-plain">         +0x008 StackLimit       : 0x02dbc000 Void
+</span><span class="z-text z-plain">         +0x00c SubSystemTib     : (null) 
+</span><span class="z-text z-plain">         +0x010 FiberData        : 0x00001e00 Void
+</span><span class="z-text z-plain">         +0x010 Version          : 0x1e00
+</span><span class="z-text z-plain">         +0x014 ArbitraryUserPointer : (null) 
+</span><span class="z-text z-plain">         +0x018 Self             : 0x02a46000 _NT_TIB
+</span><span class="z-text z-plain">   +0x01c EnvironmentPointer : (null) 
+</span><span class="z-text z-plain">   +0x020 ClientId         : _CLIENT_ID
+</span><span class="z-text z-plain">      +0x000 UniqueProcess    : 0x00001bd0 Void
+</span><span class="z-text z-plain">      +0x004 UniqueThread     : 0x000008a8 Void
+</span><span class="z-text z-plain">   +0x028 ActiveRpcHandle  : (null) 
+</span><span class="z-text z-plain">   +0x02c ThreadLocalStoragePointer : (null)
+</span><span class="z-text z-plain">   +0x030 ProcessEnvironmentBlock : 0x02a3e000 _PEB
+</span></code></pre>
+<p>También podemos mostrar los campos específicos pasando el nombre del campo como parámetro adicional:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; dt -r ntdll!_TEB @$teb ThreadLocalStoragePointer
+</span><span class="z-text z-plain">   +0x02c ThreadLocalStoragePointer : (null)
+</span></code></pre>
+<p>También se puede mostrar el tamaño de una estructura extraída de un archivo de símbolos, y esto se debe a que algunas API de Windows aceptan una estructura como argumento.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:002&gt; ?? sizeof(ntdll!_TEB)
+</span><span class="z-text z-plain">unsigned int 0x1000
+</span></code></pre>
+<h3 id="escritura-y-busqueda-en-la-memoria">Escritura y búsqueda en la memoria<a class="zola-anchor" href="#escritura-y-busqueda-en-la-memoria" aria-label="Anchor link for: escritura-y-busqueda-en-la-memoria" style="visibility: hidden;"></a>
+</h3>
+<p>Los mismo modificadores que se utilizan para el comando de visualización también se aplica para los de edición.</p>
+<p>Se muestra un ejemplo modificando un <code>DWORD</code> que apunta a <code>ESP</code>:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dd esp L1
+</span><span class="z-text z-plain">02dbf8f8  775bb509
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:003&gt; ed esp 42424242
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:003&gt; dd esp L1
+</span><span class="z-text z-plain">02dbf8f8  42424242
+</span></code></pre>
+<p>Al igual que con los comandos de visualización también podemos modificar directamente caracteres ASCII y unicode con <code>ea</code> y <code>eu</code> respectivamente:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:003&gt; dd esp L2
+</span><span class="z-text z-plain">02dbf8f8  41414141 0c027ab8
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:003&gt; ea esp &quot;Hola&quot;
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:003&gt; dc esp L2
+</span><span class="z-text z-plain">02dbf8f8  616c6f48 0c027ab8                    Hola.z..
+</span></code></pre>
+<p>Para poder buscar en la memoria se usa el comando <code>s</code>.</p>
+<p>Modificaremos el registro <code>ESP</code> para luego utilizar el comando de búsqueda:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; ed esp 41414141
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; dd esp L2
+</span><span class="z-text z-plain">061afc3c  41414141 ab95988b
+</span></code></pre>
+<p>Para realizar una búsqueda necesitamos lo siguiente:</p>
+<ul>
+<li>El tipo de memoria a buscar.</li>
+<li>El punto de inicio de la memoria a buscar.</li>
+<li>La longitud de la memoria a buscar.</li>
+<li>El patrón a buscar.</li>
+</ul>
+<p>Al buscar un tipo de memoria <code>dword</code>, usaremos d, establecemos la longitud de búsqueda en 0, ya que queremos que busque desde el principio y que abarque todo el espacio de la memoria que se  representa con <code>?80000000</code>, en este caso se buscará <code>41414141</code>.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; s -d 0 L?80000000 41414141
+</span><span class="z-text z-plain">061afc3c  41414141 ab95988b 775bb4d0 775bb4d0  AAAA......[w..[w
+</span></code></pre>
+<p>También podemos editar los registros  mediante el comando <code>r</code>, que nos permite tanto mostrarlos como modificarlos:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; r
+</span><span class="z-text z-plain">eax=00556000 ebx=00000000 ecx=775bb4d0 edx=04022008 esi=775bb4d0 edi=775bb4d0
+</span><span class="z-text z-plain">eip=77582610 esp=061afc3c ebp=061afc68 iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">----------------------------------
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; r ecx=41414141
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; r
+</span><span class="z-text z-plain">eax=00556000 ebx=00000000 ecx=41414141 edx=04022008 esi=775bb4d0 edi=775bb4d0
+</span><span class="z-text z-plain">eip=77582610 esp=061afc3c ebp=061afc68 iopl=0         nv up ei pl zr na pe nc
+</span></code></pre>
+<h2 id="puntos-de-interrupcion">Puntos de interrupción<a class="zola-anchor" href="#puntos-de-interrupcion" aria-label="Anchor link for: puntos-de-interrupcion" style="visibility: hidden;"></a>
+</h2>
+<p>Los puntos de interrupción se usan para detener la ejecución en ubicaciones de código deseadas.</p>
+<blockquote>
+<p>Los puntos de interrupción controlados directamente por el depurador se conocen como puntos de interrupción de software.</p>
+</blockquote>
+<p>Los puntos de interrupción controlados por el procesador y configurados a través del depurador se conocen como puntos de interrupción de hardware.</p>
+<h3 id="puntos-de-interrupcion-de-software">Puntos de interrupción de Software<a class="zola-anchor" href="#puntos-de-interrupcion-de-software" aria-label="Anchor link for: puntos-de-interrupcion-de-software" style="visibility: hidden;"></a>
+</h3>
+<p>Al colocar un punto de interrupción WinDbg reemplaza temporalmente el código de operación de la instrucción donde queremos que se detenga la ejecución con una instrucción de ensamblador (<code>INT 3</code>).</p>
+<p>Como seguimos con el ejemplo del notepad, vamos a poner un punto de interrupción en la API de Windows (<code>WriteFile</code>) que se utiliza para escribir datos en un archivo específico o un dispositivo de entrada/salida.</p>
+<pre class="z-code"><code><span class="z-text z-plain">bp kernel32!WriteFile
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; bl
+</span><span class="z-text z-plain">0 e Disable Clear  769ed830     0001 (0001)  0:**** KERNEL32!WriteFile
+</span></code></pre>
+<p>En estos momentos está activado, cuando intentemos guardar el documento, habremos llegado al punto de interrupción:</p>
+<pre class="z-code"><code><span class="z-text z-plain">Breakpoint 0 hit
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">eax=02bdebd0 ebx=00000000 ecx=00000006 edx=00000000 esi=00000006 edi=08504000
+</span><span class="z-text z-plain">eip=769ed830 esp=02bdebb0 ebp=02bdebe4 iopl=0         nv up ei pl nz na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200206
+</span><span class="z-text z-plain">KERNEL32!WriteFile:
+</span><span class="z-text z-plain">769ed830 ff252495a476    jmp     dword ptr [KERNEL32!_imp__WriteFile (76a49524)] ds:0023:76a49524={KERNELBASE!WriteFile (75558f20)}
+</span></code></pre>
+<p>Para habilitar y deshabilitar los puntos de interrupción, es de la siguiente forma:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:000&gt; bd 0 // deshabilitar
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:000&gt; bl 
+</span><span class="z-text z-plain">     0 d Enable Clear  769ed830     0001 (0001)  0:**** KERNEL32!WriteFile
+</span><span class="z-text z-plain">    
+</span><span class="z-text z-plain">0:000&gt; be 0 // habilitar
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:000&gt; bl
+</span><span class="z-text z-plain">     0 e Disable Clear  769ed830     0001 (0001)  0:**** KERNEL32!WriteFile
+</span></code></pre>
+<p>Para borrarlo por completo es:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; bl
+</span><span class="z-text z-plain">     0 e Disable Clear  769ed830     0001 (0001)  0:**** KERNEL32!WriteFile
+</span><span class="z-text z-plain">     
+</span><span class="z-text z-plain">0:007&gt; bc 0
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; bl
+</span><span class="z-text z-plain">// nothing
+</span></code></pre>
+<p>También existen los puntos de interrupción no resueltos que se usan mediante <code>bu</code>, las diferencias entre uno resuelto y no resuelto es al siguiente:</p>
+<blockquote>
+<p><strong>Puntos de interrupción resueltos:</strong>
+Son aquellos puntos de interrupción que el depurador ha localizado con éxito en el código fuente y que están listos para ser utilizados durante la depuración.</p>
+</blockquote>
+<p><strong>Puntos de interrupción no resueltos:</strong>
+Son aquellos puntos de interrupción que el depurador no puede localizar en el código fuente.</p>
+<blockquote>
+<ul>
+<li><strong>Causas:</strong>
+<ul>
+<li>La línea de código especificada no existe en el archivo.
+- El depurador no tiene acceso al archivo o al código fuente.
+- Cambios en el código fuente después de establecer el punto de interrupción (por ejemplo, la línea se movió o se eliminó).
+- Problemas con el proceso de compilación o con el entorno de depuración.</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>Para poder cargarlos primero hay que cargar la lista de módulos <code>lm m ole32</code>:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; bu OLE32!WriteStringStream
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; bl
+</span></code></pre>
+<p>Después de reanudar al ejecución observamos que se ha cargado <code>OLE32.dll:</code></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt;
+</span><span class="z-text z-plain">ModLoad: 77400000 7743000 C:\Windows\System32\ole32.dll 
+</span></code></pre>
+<p>También es importante recalcar que aunque el punto de interrupción se resuelva al cargar el <code>dll</code>, no se activo debido a que no se forzó una llamada a <code>ole32!WriteStringStream</code>.</p>
+<h3 id="puntos-de-interrupcion-de-hardware">Puntos de interrupción de Hardware<a class="zola-anchor" href="#puntos-de-interrupcion-de-hardware" aria-label="Anchor link for: puntos-de-interrupcion-de-hardware" style="visibility: hidden;"></a>
+</h3>
+<p>Los puntos de interrupción del hardware o del procesador son manejados por el procesador y almacenados en los registros de depuración del procesador. Pueden detener la ejecución del código cuando se realiza un tipo particular de acceso, como lectura, escritura o ejecución, a una ubicación de memoria específica.</p>
+<p>La principal ventaja de los puntos de interrupción de hardware es que permiten supervisar los cambios o acceder a los datos en memoria.</p>
+<p>En el siguiente ejemplo, vamos a establecer un punto de interrupción de hardware en la ejecución de <code>WriteFile</code>.</p>
+<p>El resultado es equivalente a establecer un punto de interrupción de software, pero en este caso, aprovechamos la CPU y los registros de depuración, en lugar de modificar el código con una instrucción INT 3.</p>
+<pre class="z-code"><code><span class="z-text z-plain">// 1 = Solo un byte
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">ba e 1 kernel32!WriteFile;g
+</span></code></pre>
+<p>Al guardar el archivo llegamos al punto de interrupción:</p>
+<pre class="z-code"><code><span class="z-text z-plain">Breakpoint 0 hit
+</span><span class="z-text z-plain">eax=00a5ecd0 ebx=00000000 ecx=00000007 edx=00000000 esi=00000007 edi=07feb800
+</span><span class="z-text z-plain">eip=7629d830 esp=00a5ecb0 ebp=00a5ece4 iopl=0         nv up ei pl nz na po nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200202
+</span><span class="z-text z-plain">KERNEL32!WriteFile:
+</span><span class="z-text z-plain">7629d830 ff2524952f76    jmp     dword ptr [KERNEL32!_imp__WriteFile (762f9524)] ds:0023:762f9524={KERNELBASE!WriteFile (756f8f20)}
+</span></code></pre>
+<p>Como se muestra en el código  anterior, cuando se alcanza el punto de interrupción, la salida es idéntica a la que se obtiene a través de un punto de interrupción de software.</p>
+<p>También se puede recorrer el código de diferentes maneras, ya sea con <code>p</code>, <code>t</code>, <code>pt</code> o <code>ph</code>.</p>
+<p><code>p</code> - <strong>Step Over</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">:000&gt; bp kernelbase!CreateFileW+0x53
+</span><span class="z-text z-plain">0:000&gt; bl
+</span><span class="z-text z-plain">     0 e Disable Clear  75660de0     0001 (0001)  0:**** KERNELBASE!CreateFileW
+</span><span class="z-text z-plain">     1 e Disable Clear  75660e33     0001 (0001)  0:**** KERNELBASE!CreateFileW+0x53
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:000&gt; p
+</span><span class="z-text z-plain">0:000&gt; p
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">Breakpoint 1 hit
+</span><span class="z-text z-plain">eax=02a7da08 ebx=00000000 ecx=02a7dca0 edx=80000000 esi=80000000 edi=00000001
+</span><span class="z-text z-plain">eip=75660e33 esp=02a7da00 ebp=02a7da24 iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200246
+</span><span class="z-text z-plain">KERNELBASE!CreateFileW+0x53:
+</span><span class="z-text z-plain">75660e33 ff7518          push    dword ptr [ebp+18h]  ss:0023:02a7da3c=00000003
+</span></code></pre>
+<p><code>t</code> - <strong>Step Into</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:000&gt; t
+</span><span class="z-text z-plain">eax=02ead770 ebx=00000000 ecx=02eada08 edx=80000000 esi=80000000 edi=00000001
+</span><span class="z-text z-plain">eip=75660e39 esp=02ead760 ebp=02ead78c iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200246
+</span><span class="z-text z-plain">KERNELBASE!CreateFileW+0x59:
+</span><span class="z-text z-plain">75660e39 e812000000      call    KERNELBASE!CreateFileInternal (75660e50)
+</span></code></pre>
+<p>Podemos usar los comandos "step into" y "step over" indistintamente, excepto cuando encontramos una instrucción de llamada . En el siguiente código se ejecuta el mismo fragmento de código, pero en su lugar, pasamos por encima de la llamada.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:000&gt; p
+</span><span class="z-text z-plain">eax=0008dcc0 ebx=00000000 ecx=0008df58 edx=80000000 esi=80000000 edi=00000001
+</span><span class="z-text z-plain">eip=75660e39 esp=0008dcb0 ebp=0008dcdc iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200246
+</span><span class="z-text z-plain">KERNELBASE!CreateFileW+0x59:
+</span><span class="z-text z-plain">75660e39 e812000000      call    KERNELBASE!CreateFileInternal (75660e50)
+</span></code></pre>
+<p>Aquí observamos que con el comando <code>p</code> continuaremos a través de la aplicación sin tomar ningún desvío a través de funciones anidadas. Otro comando conveniente es <code>pt</code> (paso al siguiente retorno), que nos permite avanzar rápidamente hasta el final de
+una función.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:000&gt; pt
+</span><span class="z-text z-plain">eax=000004b0 ebx=00000000 ecx=fe931c84 edx=00000000 esi=80000000 edi=00000001
+</span><span class="z-text z-plain">eip=75660e41 esp=02a9dc70 ebp=02a9dcfc iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200246
+</span><span class="z-text z-plain">KERNELBASE!CreateFileW+0x61:
+</span><span class="z-text z-plain">75660e41 c21c00          ret     1Ch
+</span></code></pre>
+<p>Al igual que el comando <code>pt</code> , <code>ph</code> ejecuta código hasta que se alcanza una instrucción de ramificación. Esto incluye ramificaciones condicionales o incondicionales, llamadas a funciones e instrucciones de retorno.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:000&gt; ph
+</span><span class="z-text z-plain">eax=00000000 ebx=00000000 ecx=00000000 edx=0303dad0 esi=80000000 edi=00000001
+</span><span class="z-text z-plain">eip=75660e11 esp=0303d838 ebp=0303d854 iopl=0         nv up ei pl zr na pe nc
+</span><span class="z-text z-plain">cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200246
+</span><span class="z-text z-plain">KERNELBASE!CreateFileW+0x31:
+</span><span class="z-text z-plain">75660e11 7531            jne     KERNELBASE!CreateFileW+0x64 (75660e44)  [br=0]
+</span></code></pre>
+<h1 id="otras-funciones-de-windbg">Otras funciones de WinDbg<a class="zola-anchor" href="#otras-funciones-de-windbg" aria-label="Anchor link for: otras-funciones-de-windbg" style="visibility: hidden;"></a>
+</h1>
+<p><strong>Listar los módulos y símbolos:</strong></p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; lm
+</span><span class="z-text z-plain">start    end        module name
+</span><span class="z-text z-plain">00100000 0012e000   notepad    (pdb symbols)          C:\ProgramData\Dbg\sym\notepad.pdb\ADBDBE4C7390D98531FB4768CE6821011\notepad.pdb
+</span><span class="z-text z-plain">5cec0000 5cf5b000   efswrt     (deferred)             
+</span><span class="z-text z-plain">624e0000 62533000   oleacc     (deferred)             
+</span><span class="z-text z-plain">64b50000 64be4000   TextShaping   (deferred)             
+</span><span class="z-text z-plain">64e20000 65030000   COMCTL32   (deferred)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">...
+</span></code></pre>
+<p>En el código anterior no se cargan los símbolos, por lo tanto con <code>.reload /f</code> , se volverían a listar los módulos:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; lm
+</span><span class="z-text z-plain">start    end        module name
+</span><span class="z-text z-plain">00100000 0012e000   notepad    (pdb symbols)          C:\ProgramData\Dbg\sym\notepad.pdb\ADBDBE4C7390D98531FB4768CE6821011\notepad.pdb
+</span><span class="z-text z-plain">5cec0000 5cf5b000   efswrt     (pdb symbols)          C:\ProgramData\Dbg\sym\efswrt.pdb\B03D277C5AAF0B084B893255559BA4871\efswrt.pdb
+</span><span class="z-text z-plain">624e0000 62533000   oleacc     (pdb symbols)          C:\ProgramData\Dbg\sym\oleacc.pdb\0D7A0ADA8E052DAA048EBE8BC61062071\oleacc.pdb
+</span><span class="z-text z-plain">64b50000 64be4000   TextShaping   (pdb symbols)          C:\ProgramData\Dbg\sym\TextShaping.pdb\1B139FA8DD359F8159D13590F130DD951\TextShaping.pdb
+</span><span class="z-text z-plain">64e20000 65030000   COMCTL32   (pdb symbols)          C:\ProgramData\Dbg\sym\comctl32.pdb\58ED30050F718EF61105AECF9CA8E1531\comctl32.pdb
+</span></code></pre>
+<p>También se puede usar <code>*</code> modo de filtro, por ejemplo para buscar todos los módulos que empiecen con Kernel.</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; lm m kernel*
+</span><span class="z-text z-plain">Browse full module list
+</span><span class="z-text z-plain">start    end        module name
+</span><span class="z-text z-plain">737d0000 737df000   kernel_appcore   (pdb symbols)          C:\ProgramData\Dbg\sym\Kernel.Appcore.pdb\239BF5D8CF08B2AA14562319CBC391D21\Kernel.Appcore.pdb
+</span><span class="z-text z-plain">75550000 75787000   KERNELBASE   (pdb symbols)          C:\ProgramData\Dbg\sym\kernelbase.pdb\9A5BA36242F92AB60025CDCB3DFA1AB41\kernelbase.pdb
+</span><span class="z-text z-plain">76af0000 76b8b000   KERNEL32   (pdb symbols)          C:\ProgramData\Dbg\sym\kernel32.pdb\3F37C9753B726FC015B6204CE3D41BB41\kernel32.pdb
+</span></code></pre>
+<p>Con el comando <code>x</code>, podemos examinar cada módulo individual, de nuevo se utiliza <code>*</code> para filtrar:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; x kernelbase!CreateProc*
+</span><span class="z-text z-plain">756aabdf          KERNELBASE!CreateProcessExtensions::ReleaseAppXContext (void)
+</span><span class="z-text z-plain">75665870          KERNELBASE!CreateProcessInternalA (void)
+</span><span class="z-text z-plain">756dcaa0          KERNELBASE!CreateProcessWithTokenW (void)
+</span><span class="z-text z-plain">756dc990          KERNELBASE!CreateProcessAsUserA (void)
+</span><span class="z-text z-plain">756dc990          KERNELBASE!CreateProcessAsUserW (void)
+</span><span class="z-text z-plain">756dc990          KERNELBASE!CreateProcessWithLogonW (void)
+</span><span class="z-text z-plain">7571cf0f          KERNELBASE!CreateProcessExtensions::ErrorContext::LogError (public: void __thiscall CreateProcessExtensions::ErrorContext::LogError(long,struct Common::COMMON_STRING *))
+</span><span class="z-text z-plain">7572ed60          KERNELBASE!CreateProcessAsUserA (_CreateProcessAsUserA@44)
+</span><span class="z-text z-plain">756ac920          KERNELBASE!CreateProcessAsUserW (_CreateProcessAsUserW@44)
+</span><span class="z-text z-plain">7571cbe5          KERNELBASE!CreateProcessExtensions::CreateSharedLocalFolder (public: static long __stdcall CreateProcessExtensions::CreateSharedLocalFolder(struct Common::COMMON_STRING const &amp;))
+</span><span class="z-text z-plain">75677fd7          KERNELBASE!CreateProcessExtensions::PreCreationExtension (public: static long __stdcall CreateProcessExtensions::PreCreationExtension(void *,struct Common::COMMON_STRING *,struct _SECURITY_CAPABILITIES *,class CreateProcessExtensions::ErrorContext *,struct _APPX_PROCESS_CONTEXT * *))
+</span><span class="z-text z-plain">75662290          KERNELBASE!CreateProcessInternalW (_CreateProcessInternalW@48)
+</span><span class="z-text z-plain">756a4fa0          KERNELBASE!CreateProcessA (_CreateProcessA@40)
+</span><span class="z-text z-plain">756a6b70          KERNELBASE!CreateProcessW (_CreateProcessW@40)
+</span></code></pre>
+<p>Además también se puede utilizar como calculadora:</p>
+<pre class="z-code"><code><span class="z-text z-plain">? 77269bc0 - 77231430
+</span><span class="z-text z-plain">Evaluate expression: 231312 = 00038790
+</span></code></pre>
+<p>Admite tanto suma, resta, división y multiplicación.</p>
+<p>Adicionalmente, también se puede usar como conversor de datos:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; ? 41414141
+</span><span class="z-text z-plain">Evaluate expression: 1094795585 = 41414141
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; ? 0n41414141 // Decimal
+</span><span class="z-text z-plain">Evaluate expression: 41414141 = 0277edfd
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">0:007&gt; ? 0y1110100110111 // Binario
+</span><span class="z-text z-plain">Evaluate expression: 7479 = 00001d37
+</span></code></pre>
+<p>O mostrar todos con el comando <code>.format</code>:</p>
+<pre class="z-code"><code><span class="z-text z-plain">0:007&gt; .formats 41414141
+</span><span class="z-text z-plain">Evaluate expression:
+</span><span class="z-text z-plain">  Hex:     41414141
+</span><span class="z-text z-plain">  Decimal: 1094795585
+</span><span class="z-text z-plain">  Decimal (unsigned) : 1094795585
+</span><span class="z-text z-plain">  Octal:   10120240501
+</span><span class="z-text z-plain">  Binary:  01000001 01000001 01000001 01000001
+</span><span class="z-text z-plain">  Chars:   AAAA
+</span><span class="z-text z-plain">  Time:    Fri Sep 10 07:53:05 2004
+</span><span class="z-text z-plain">  Float:   low 12.0784 high 0
+</span><span class="z-text z-plain">  Double:  5.40901e-315
+</span></code></pre>
+<h1 id="referencias">Referencias<a class="zola-anchor" href="#referencias" aria-label="Anchor link for: referencias" style="visibility: hidden;"></a>
+</h1>
+<ul>
+<li>
+<p>https://learn.microsoft.com/es-es/windows-hardware/drivers/debugger/getting-started-with-windbg</p>
+</li>
+<li>
+<p>https://learn.microsoft.com/es-es/windows-hardware/drivers/debugger/debugger-operation-win8</p>
+</li>
+<li>
+<p>https://learn.microsoft.com/es-es/windows-hardware/drivers/debugger/standard-debugging-techniques</p>
+</li>
+</ul>
+
+      </article>
+
+      
+      
+
+      
+      
+    </div>
+
+    
+
+
+<footer>
+  <div class="left">
+    <div class="copyright">
+      © 0x7e9 Dreamer
+      
+    </div>
+  </div>
+
+  <div class="right">
+    
+    
+      
+    
+    
+    <a id="rss-btn" href="https://example.com/posts/feed.xml">RSS</a>
+    
+    
+
+    
+    
+    
+    <button id="theme-toggle" aria-label="theme switch">
+      <span class="moon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z" fill="currentColor"></path></svg>
+</span>
+      <span class="sun-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z" fill="currentColor"></path></svg>
+</span>
+    </button>
+    
+  </div>
+</footer>
+
+
+
+
+<dialog id="rss-mask">
+  <div>
+    <a href="https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml">https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml</a>
+    
+    
+    <button autofocus aria-label="copy" data-link="https:&#x2F;&#x2F;example.com&#x2F;posts&#x2F;feed.xml" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z" fill="currentColor"></path></svg>
+
+    </button>
+  </div>
+</dialog>
+
+
+
+  </main>
+</div>
+
+  
+<script src="/js/lightense.min.js"></script>
+
+
+  <script src="https://example.com/js/main.js"></script>
+</body>
+
+</html>
