@@ -1,46 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://example.com/</loc>
+        <loc>https://dreamer-r3.github.io/</loc>
     </url>
     <url>
-        <loc>https://example.com/categories/</loc>
+        <loc>https://dreamer-r3.github.io/categories/</loc>
     </url>
     <url>
-        <loc>https://example.com/posts/</loc>
+        <loc>https://dreamer-r3.github.io/posts/</loc>
     </url>
     <url>
-        <loc>https://example.com/posts/encabezado-pe/</loc>
+        <loc>https://dreamer-r3.github.io/posts/encabezado-pe/</loc>
         <lastmod>2025-11-12</lastmod>
     </url>
     <url>
-        <loc>https://example.com/posts/shellcode-personalizado-32-bits/</loc>
+        <loc>https://dreamer-r3.github.io/posts/shellcode-personalizado-32-bits/</loc>
         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
-        <loc>https://example.com/posts/stack-based/</loc>
+        <loc>https://dreamer-r3.github.io/posts/stack-based/</loc>
         <lastmod>2025-11-11</lastmod>
     </url>
     <url>
-        <loc>https://example.com/posts/uso-windbg/</loc>
+        <loc>https://dreamer-r3.github.io/posts/uso-windbg/</loc>
         <lastmod>2025-11-07</lastmod>
     </url>
     <url>
-        <loc>https://example.com/tags/</loc>
+        <loc>https://dreamer-r3.github.io/tags/</loc>
     </url>
     <url>
-        <loc>https://example.com/tags/asm/</loc>
+        <loc>https://dreamer-r3.github.io/tags/asm/</loc>
     </url>
     <url>
-        <loc>https://example.com/tags/exploiting/</loc>
+        <loc>https://dreamer-r3.github.io/tags/exploiting/</loc>
     </url>
     <url>
-        <loc>https://example.com/tags/shellcoding/</loc>
+        <loc>https://dreamer-r3.github.io/tags/shellcoding/</loc>
     </url>
     <url>
-        <loc>https://example.com/tags/windbg/</loc>
+        <loc>https://dreamer-r3.github.io/tags/windbg/</loc>
     </url>
     <url>
-        <loc>https://example.com/tags/windows-internals/</loc>
+        <loc>https://dreamer-r3.github.io/tags/windows-internals/</loc>
     </url>
 </urlset>

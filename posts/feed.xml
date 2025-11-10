@@ -2,20 +2,20 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
 	<title>My Blog</title>
 	<subtitle>My blog site.</subtitle>
-	<link rel="self" type="application/atom+xml" href="https://example.com/posts/feed.xml"/>
-  <link rel="alternate" type="text/html" href="https://example.com/posts/"/>
+	<link rel="self" type="application/atom+xml" href="https://dreamer-r3.github.io/posts/feed.xml"/>
+  <link rel="alternate" type="text/html" href="https://dreamer-r3.github.io/posts/"/>
   
 	<updated>2025-11-12T00:00:00+00:00</updated>
 	
-	<id>https://example.com/posts/feed.xml</id>
+	<id>https://dreamer-r3.github.io/posts/feed.xml</id>
 	<entry xml:lang="en">
 		<title>Análisis del formato PE</title>
 		<published>2025-11-12T00:00:00+00:00</published>
 		<updated>2025-11-12T00:00:00+00:00</updated>
-		<link rel="alternate" type="text/html" href="https://example.com/posts/encabezado-pe/"/>
-		<id>https://example.com/posts/encabezado-pe/</id>
+		<link rel="alternate" type="text/html" href="https://dreamer-r3.github.io/posts/encabezado-pe/"/>
+		<id>https://dreamer-r3.github.io/posts/encabezado-pe/</id>
     
-		<content type="html" xml:base="https://example.com/posts/encabezado-pe/">&lt;p&gt;Portable Executable (PE) es el formato de archivo para ejecutables en Windows. Algunos ejemplos de extensiones de archivos PE son .exe, .dll, .sys y .scr.&lt;&#x2F;p&gt;
+		<content type="html" xml:base="https://dreamer-r3.github.io/posts/encabezado-pe/">&lt;p&gt;Portable Executable (PE) es el formato de archivo para ejecutables en Windows. Algunos ejemplos de extensiones de archivos PE son .exe, .dll, .sys y .scr.&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;img src=&quot;&#x2F;encabezado-pe&#x2F;intro.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;dos-header&quot;&gt;DOS Header&lt;a class=&quot;zola-anchor&quot; href=&quot;#dos-header&quot; aria-label=&quot;Anchor link for: dos-header&quot; style=&quot;visibility: hidden;&quot;&gt;&lt;&#x2F;a&gt;
 &lt;&#x2F;h2&gt;
@@ -324,10 +324,10 @@
 		<title>Stack-Based Buffer Overflow</title>
 		<published>2025-11-11T00:00:00+00:00</published>
 		<updated>2025-11-11T00:00:00+00:00</updated>
-		<link rel="alternate" type="text/html" href="https://example.com/posts/stack-based/"/>
-		<id>https://example.com/posts/stack-based/</id>
+		<link rel="alternate" type="text/html" href="https://dreamer-r3.github.io/posts/stack-based/"/>
+		<id>https://dreamer-r3.github.io/posts/stack-based/</id>
     
-		<content type="html" xml:base="https://example.com/posts/stack-based/">&lt;p&gt;Un desbordamiento de &lt;strong&gt;Búfer&lt;&#x2F;strong&gt; basado en la pila, ocurre cuando un programa asigna un tamaño de memoria X, y este es sobrepasado por la cantidad de información que se manda, pudiendo sobrescribir parte de la memoria adyacente.&lt;&#x2F;p&gt;
+		<content type="html" xml:base="https://dreamer-r3.github.io/posts/stack-based/">&lt;p&gt;Un desbordamiento de &lt;strong&gt;Búfer&lt;&#x2F;strong&gt; basado en la pila, ocurre cuando un programa asigna un tamaño de memoria X, y este es sobrepasado por la cantidad de información que se manda, pudiendo sobrescribir parte de la memoria adyacente.&lt;&#x2F;p&gt;
 &lt;p&gt;El siguiente snippet de código muestra un ejemplo de como un búfer tiene un tamaño estático.&lt;&#x2F;p&gt;
 &lt;p&gt;La función principal define primero una matriz de caracteres llamada buffer con capacidad para hasta 80 caracteres. Dado que esta variable está definida dentro de una función, el compilador la tratará como una variable local y se la reservará un tamaño de 80 bytes en la pila.&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;c&quot; class=&quot;language-c z-code&quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;z-source z-c&quot;&gt;&lt;span class=&quot;z-meta z-preprocessor z-include z-c&quot;&gt;&lt;span class=&quot;z-keyword z-control z-import z-include z-c&quot;&gt;#include&lt;&#x2F;span&gt; &lt;span class=&quot;z-string z-quoted z-other z-lt-gt z-include z-c&quot;&gt;&lt;span class=&quot;z-punctuation z-definition z-string z-begin z-c&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;stdio.h&lt;span class=&quot;z-punctuation z-definition z-string z-end z-c&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
@@ -608,10 +608,10 @@
 		<title>Explicación de comandos en WinDBG</title>
 		<published>2025-11-07T00:00:00+00:00</published>
 		<updated>2025-11-07T00:00:00+00:00</updated>
-		<link rel="alternate" type="text/html" href="https://example.com/posts/uso-windbg/"/>
-		<id>https://example.com/posts/uso-windbg/</id>
+		<link rel="alternate" type="text/html" href="https://dreamer-r3.github.io/posts/uso-windbg/"/>
+		<id>https://dreamer-r3.github.io/posts/uso-windbg/</id>
     
-		<content type="html" xml:base="https://example.com/posts/uso-windbg/">&lt;p&gt;WinDbg es un depurador que se puede usar para analizar volcados de memoria, depurar el modo de usuario activo y el código en modo kernel, y examinar los registros de CPU y la memoria.&lt;&#x2F;p&gt;
+		<content type="html" xml:base="https://dreamer-r3.github.io/posts/uso-windbg/">&lt;p&gt;WinDbg es un depurador que se puede usar para analizar volcados de memoria, depurar el modo de usuario activo y el código en modo kernel, y examinar los registros de CPU y la memoria.&lt;&#x2F;p&gt;
 &lt;p&gt;En este caso solo nos enfocaremos en el &lt;strong&gt;modo usuario&lt;&#x2F;strong&gt;, y se mostrarán los ejemplos con el bloc de notas de Windows de 32 bits (notepad).&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;interfaz-de-windbg&quot;&gt;Interfaz de WinDbg&lt;a class=&quot;zola-anchor&quot; href=&quot;#interfaz-de-windbg&quot; aria-label=&quot;Anchor link for: interfaz-de-windbg&quot; style=&quot;visibility: hidden;&quot;&gt;&lt;&#x2F;a&gt;
 &lt;&#x2F;h2&gt;
@@ -1089,10 +1089,10 @@ una función.&lt;&#x2F;p&gt;
 		<title>Creación de un shellcode personalizado de 32 Bits</title>
 		<published>2025-11-03T00:00:00+00:00</published>
 		<updated>2025-11-03T00:00:00+00:00</updated>
-		<link rel="alternate" type="text/html" href="https://example.com/posts/shellcode-personalizado-32-bits/"/>
-		<id>https://example.com/posts/shellcode-personalizado-32-bits/</id>
+		<link rel="alternate" type="text/html" href="https://dreamer-r3.github.io/posts/shellcode-personalizado-32-bits/"/>
+		<id>https://dreamer-r3.github.io/posts/shellcode-personalizado-32-bits/</id>
     
-		<content type="html" xml:base="https://example.com/posts/shellcode-personalizado-32-bits/">&lt;h2 id=&quot;que-es-un-shellcode&quot;&gt;Qué es un shellcode&lt;a class=&quot;zola-anchor&quot; href=&quot;#que-es-un-shellcode&quot; aria-label=&quot;Anchor link for: que-es-un-shellcode&quot; style=&quot;visibility: hidden;&quot;&gt;&lt;&#x2F;a&gt;
+		<content type="html" xml:base="https://dreamer-r3.github.io/posts/shellcode-personalizado-32-bits/">&lt;h2 id=&quot;que-es-un-shellcode&quot;&gt;Qué es un shellcode&lt;a class=&quot;zola-anchor&quot; href=&quot;#que-es-un-shellcode&quot; aria-label=&quot;Anchor link for: que-es-un-shellcode&quot; style=&quot;visibility: hidden;&quot;&gt;&lt;&#x2F;a&gt;
 &lt;&#x2F;h2&gt;
 &lt;p&gt;Un shellcode es un conjunto de Instrucciones de CPU que se ejecutan tras explotar una vulnerabilidad.&lt;&#x2F;p&gt;
 &lt;p&gt;Dado que el shellcode generalmente se escribe en ensamblador y luego se traduce a los códigos de operación hexadecimales, se puede usar para manipular directamente los registros de la CPU y llamar a funciones del sistema.&lt;&#x2F;p&gt;

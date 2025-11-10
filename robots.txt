@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 Allow: /
-Sitemap: https://example.com/sitemap.xml
+Sitemap: https://dreamer-r3.github.io/sitemap.xml
